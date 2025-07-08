@@ -17,20 +17,44 @@ function activate(context) {
 	
 	const disposable = vscode.commands.registerCommand('accesibility-helper.helloWorld', function () {
 		// The code you place here will be executed every time your command is executed
-        const current_active_window = vscode.window.activeTextEditor;
+        
 		
-    
-		const original_text;
-		 if (current_active_window) {
-         	original_text = current_active_window.document.getText().match(/<img[\S\s]*?>/g); // <--- set a breakpoint here
-          } else {
-        	vscode.window.showInformationMessage('No active editor is open.');
-           }
+        function findImageTags(active_window){
+			/* Finds all of the html img tags */
+            if (active_window) {
+			  text = active_window.document.getText().match(/<img[\S\s]*?>/g)
+         	  return text||[]
+          	}	 else {
+        	  vscode.window.showInformationMessage('No active editor is open.');
+			  return []
+        	}
+		}
+		
+		function replaceAlts(image_elements_array){
+           image_elements_array.forEach((element,index) => {
+			    
+			if(element.includes(" alt=")||element.includes(" alt ="))
+			{
+                image_elements_array[index] = element.replace(/\salt\s?=\s?["'].*["']/, ' alt = "no source"')
+			}
+			else
+			{
+			   image_elements_array[index] = element.replace(/\/?>/, ' alt = "no source">')
+			}
+				
+		   });
+		   
+               return image_elements_array
+		}
+
+		const current_active_window = vscode.window.activeTextEditor;
+		let original_text = findImageTags(current_active_window);
+		original_text = replaceAlts(original_text);
+		
 		
 	
         
-    // Find all <img ... /> tags in the current active window's document
-		// Display a message box to the user
+ 
 		vscode.window.showInformationMessage('Hello World from accesibility_helper!');
 	});
 
