@@ -4,29 +4,28 @@ const vscode = require('vscode');
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
-//To-Do: Handle if the link has a <> character
+
 /**
  * @param {vscode.ExtensionContext} context
  */
+
+//To-Do: Handle if the link has a <> characters
 function activate(context) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "accesibility-helper" is now active!');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
+	
 	const disposable = vscode.commands.registerCommand('accesibility-helper.helloWorld', function () {
 		// The code you place here will be executed every time your command is executed
         const current_active_window = vscode.window.activeTextEditor;
+		
+    
+		const original_text;
 		 if (current_active_window) {
-        const original_text = current_active_window.document.getText().match(/<img[\S\s]*?>/g);
-        	console.log("🖼️ Found images:", original_text[0]); // <--- set a breakpoint here
-       } else {
-        console.log("❌ No active editor");
-        vscode.window.showInformationMessage('No active editor is open.');
-    }
+         	original_text = current_active_window.document.getText().match(/<img[\S\s]*?>/g); // <--- set a breakpoint here
+          } else {
+        	vscode.window.showInformationMessage('No active editor is open.');
+           }
 		
 	
         
