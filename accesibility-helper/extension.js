@@ -58,12 +58,23 @@ function activate(context) {
            return og_text;
 		}
         
-		function replaceDocument(active_window){
+		async function replaceDocument(active_window,changed_text){
 			const lastLine = active_window.document.lineCount-1
-            const start = vscode.Position(0,0)
-			const end = vscode.Position(lastLine,active_window.document.lineAt(lastLine).getText().length())
-			const range = vscode.Range(start,end)
-			current_active_window.document.replace(range,edited_text)
+			const lastCharacter = active_window.document.lineAt(lastLine).text.length-1
+            const start = new vscode.Position(0,0)
+			const end = new vscode.Position(lastLine,lastCharacter)
+			const range = new vscode.Range(start,end)
+			const edit = await active_window.edit((editBuilder)=>{
+				
+				    editBuilder.replace(range,changed_text)
+				 
+				
+			
+			})
+			
+			await edit. then(console.log(edit))
+			
+		 
 		}   
 
 		const current_active_window = vscode.window.activeTextEditor;
@@ -72,7 +83,7 @@ function activate(context) {
 		let edited_text = [];
 		replaceAlts(og_text_img_tags,edited_text);
         let new_text=addEditstoOriginalText(og_text,og_text_img_tags,edited_text)
-		console.log("Breakpoint")
+		replaceDocument(current_active_window,new_text).then(console.log("done"))
 
 		
 		
