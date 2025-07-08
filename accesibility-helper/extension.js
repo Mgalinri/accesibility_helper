@@ -37,11 +37,11 @@ function activate(context) {
 			    
 			if(element.includes(" alt=")||element.includes(" alt ="))
 			{
-                edited_text.append(element.replace(/\salt\s?=\s?["'].*["']/, ' alt = "no source"'))
+                edited_text.push(element.replace(/\salt\s?=\s?["'].*["']/, ' alt = "no source"'))
 			}
 			else
 			{
-			   edited_text.append(element.replace(/\/?>/, ' alt = "no source">'))
+			    edited_text.push(element.replace(/\/?>/, ' alt = "no source">'))
 			}
 				
 		   });
@@ -55,7 +55,7 @@ function activate(context) {
 				og_text = og_text.replace(element,edited_fragments[index])
 
 			})
-             
+           return og_text;
 		}
         
 		function replaceDocument(active_window){
@@ -69,9 +69,10 @@ function activate(context) {
 		const current_active_window = vscode.window.activeTextEditor;
 		let og_text = current_active_window.document.getText()
 		const og_text_img_tags =findImageTags(current_active_window);
-		let edited_text;
+		let edited_text = [];
 		replaceAlts(og_text_img_tags,edited_text);
-		addEditstoOriginalText(og_text,og_text_img_tags,edited_text)
+        let new_text=addEditstoOriginalText(og_text,og_text_img_tags,edited_text)
+		console.log("Breakpoint")
 
 		
 		
