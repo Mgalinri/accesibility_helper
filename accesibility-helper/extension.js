@@ -58,6 +58,21 @@ function activate(context) {
            return og_text;
 		}
         
+		function extractSrcTag(og_fragments){
+			const srctags = []
+			og_fragments.forEach((element)=>{
+				//
+				srctags.push(element.match(/\bsrc\s?=\s?['"][\s\S]*?['"]/)[0])
+			})
+			return srctags
+		}
+
+		function extractSrcTagValue(src_tags){
+			const links = []
+			src_tags.forEach((element)=>{
+                links.push(element.match(/["'].*?["']/)[0])
+			})
+		}
 		async function replaceDocument(active_window,changed_text){
 			const lastLine = active_window.document.lineCount-1
 			const lastCharacter = active_window.document.lineAt(lastLine).text.length-1
@@ -74,13 +89,13 @@ function activate(context) {
 			
 			await edit. then(console.log(edit))
 			
-		 
 		}   
 
 		const current_active_window = vscode.window.activeTextEditor;
 		let og_text = current_active_window.document.getText()
 		const og_text_img_tags =findImageTags(current_active_window);
 		let edited_text = [];
+		extractSRC(og_text_img_tags);
 		replaceAlts(og_text_img_tags,edited_text);
         let new_text=addEditstoOriginalText(og_text,og_text_img_tags,edited_text)
 		replaceDocument(current_active_window,new_text).then(console.log("done"))
