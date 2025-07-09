@@ -33,7 +33,8 @@ function activate(context) {
 		}
 
 		function replaceAlts(image_elements_array,edited_text){
-           image_elements_array.forEach((element,index) => {
+            
+			image_elements_array.forEach((element,index) => {
 			    
 			if(element.includes(" alt=")||element.includes(" alt ="))
 			{
