@@ -32,17 +32,18 @@ function activate(context) {
         	}
 		}
 
-		function replaceAlts(image_elements_array,edited_text){
-            
+		async function replaceAlts(image_elements_array,edited_text){
+
+            const captions = await generateCaptions(image_elements_array)
 			image_elements_array.forEach((element,index) => {
 			    
 			if(element.includes(" alt=")||element.includes(" alt ="))
 			{
-                edited_text.push(element.replace(/\salt\s?=\s?["'].*["']/, ' alt = "no source"'))
+                edited_text.push(element.replace(/\salt\s?=\s?["'].*["']/, ' alt ="'+captions[index]+' "'))
 			}
 			else
 			{
-			    edited_text.push(element.replace(/\/?>/, ' alt = "no source">'))
+			    edited_text.push(element.replace(/\/?>/, ' alt = "'+captions[index]+' ">'))
 			}
 				
 		   });
@@ -50,13 +51,14 @@ function activate(context) {
                return edited_text
 		}
 
-		function addEditstoOriginalText(og_text,og_fragments,edited_fragments){
-			og_fragments.forEach((element,index)=>{
+		async function addEditstoOriginalText(og_doc,og_fragments,edited_fragments){
+			for (let i=0;i<og_fragments.length;i++)
+			{
 				
-				og_text = og_text.replace(element,edited_fragments[index])
+				og_doc = og_doc.replace(og_fragments[i],await edited_fragments[i])
 
-			})
-           return og_text;
+			}
+           return og_doc;
 		}
         
 		function extractSrcTag(og_fragments){
@@ -77,49 +79,61 @@ function activate(context) {
 		}
         
 		async function fetchApi(link) {
-			console.log(link)
+			try{
 			const caption = await fetch('http://localhost:8000/caption/url',{
 				"method": "POST",
 				"headers":{
 				"Content-Type": "application/json"},
 				"body": JSON.stringify(
-					{"image_path":link}
+					{"image_path":""+link+""}
 				)
 			})
-			const data = await caption.text();
-			return data;
+			const data = await caption.json();
+			if(caption.status !== 200){
+				return "No source";
+			}
+			
+			return data.caption}
+			catch(error){
+				console.log(error)
+				return "No source";
+			}
 		}
 		async function generateCaptions(og_fragments){
 			const src_tags = extractSrcTag(og_fragments);
 			const links_arrays = extractSrcTagValue(src_tags);
 
             const captions = []
-			links_arrays.forEach(async (element)=>{
+			for (const element of links_arrays){
 				//Pass each element through the api
 				//Check if the link is empty
-				console.log(element)
-				captions.push(await fetchApi('https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630'))
+			  if(element !== undefined)	{
+				const data = await fetchApi(element)
+				captions.push(data)
+			  }
+			  else{
+				captions.push("No source")
+			  }}
 
-			})
-           return captions
+			
+           return await captions
 			
 		}
 
 		async function replaceDocument(active_window,changed_text){
 			const lastLine = active_window.document.lineCount-1
-			const lastCharacter = active_window.document.lineAt(lastLine).text.length-1
+			const lastCharacter = active_window.document.lineAt(lastLine).text.length
             const start = new vscode.Position(0,0)
 			const end = new vscode.Position(lastLine,lastCharacter)
 			const range = new vscode.Range(start,end)
-			const edit = await active_window.edit((editBuilder)=>{
+			await active_window.edit((editBuilder)=>{
 				
-				    editBuilder.replace(range,changed_text)
+				    editBuilder.replace(range, changed_text)
 				 
 				
 			
 			})
 			
-			await edit
 			
 		}   
 
@@ -127,14 +141,13 @@ function activate(context) {
 		let og_text = current_active_window.document.getText()
 		const og_text_img_tags =findImageTags(current_active_window);
 		let edited_text = [];
-		replaceAlts(og_text_img_tags,edited_text);
-        let new_text=addEditstoOriginalText(og_text,og_text_img_tags,edited_text)
-		let captions;
-		generateCaptions(og_text_img_tags).then((data)=>{
-			console.log(data)
-			
-		})
-		replaceDocument(current_active_window,new_text)
+		replaceAlts(og_text_img_tags,edited_text)
+		.then((edited_text)=>{
+			return addEditstoOriginalText(og_text,og_text_img_tags,edited_text)})
+		.then( async (e)=>{
+		    const edits = await e;
+		    replaceDocument(current_active_window,edits)})
+		
 
 		
 		
