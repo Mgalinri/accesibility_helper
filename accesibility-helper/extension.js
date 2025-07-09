@@ -64,15 +64,46 @@ function activate(context) {
 				//
 				srctags.push(element.match(/\bsrc\s?=\s?['"][\s\S]*?['"]/)[0])
 			})
-			return srctags
+			return srctags;
 		}
 
 		function extractSrcTagValue(src_tags){
 			const links = []
 			src_tags.forEach((element)=>{
-                links.push(element.match(/["'].*?["']/)[0])
+                links.push(element.match(/["'](.*)?["']/)[1])
 			})
+			return links;
 		}
+        
+		async function fetchApi(link) {
+			console.log(link)
+			const caption = await fetch('http://localhost:8000/caption/url',{
+				"method": "POST",
+				"headers":{
+				"Content-Type": "application/json"},
+				"body": JSON.stringify(
+					{"image_path":link}
+				)
+			})
+			const data = await caption.text();
+			return data;
+		}
+		async function generateCaptions(og_fragments){
+			const src_tags = extractSrcTag(og_fragments);
+			const links_arrays = extractSrcTagValue(src_tags);
+
+            const captions = []
+			links_arrays.forEach(async (element)=>{
+				//Pass each element through the api
+				//Check if the link is empty
+				console.log(element)
+				captions.push(await fetchApi('https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630'))
+
+			})
+           return captions
+			
+		}
+
 		async function replaceDocument(active_window,changed_text){
 			const lastLine = active_window.document.lineCount-1
 			const lastCharacter = active_window.document.lineAt(lastLine).text.length-1
@@ -87,7 +118,7 @@ function activate(context) {
 			
 			})
 			
-			await edit. then(console.log(edit))
+			await edit
 			
 		}   
 
@@ -95,10 +126,14 @@ function activate(context) {
 		let og_text = current_active_window.document.getText()
 		const og_text_img_tags =findImageTags(current_active_window);
 		let edited_text = [];
-		extractSRC(og_text_img_tags);
 		replaceAlts(og_text_img_tags,edited_text);
         let new_text=addEditstoOriginalText(og_text,og_text_img_tags,edited_text)
-		replaceDocument(current_active_window,new_text).then(console.log("done"))
+		let captions;
+		generateCaptions(og_text_img_tags).then((data)=>{
+			console.log(data)
+			
+		})
+		replaceDocument(current_active_window,new_text)
 
 		
 		
